@@ -10,4 +10,11 @@
   display: block;
   margin: 5px 0;
 }
+
+.tabpanel-item {
+  height: 200px;
+  user-select: none;
+  padding-left: 25px;
+  padding-top: 55px;
+}
   
