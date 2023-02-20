@@ -1,129 +1,170 @@
 import React from 'react';
-import { Navigate  } from "react-router-dom";
-import Form, {Item, GroupItem} from 'devextreme-react/form';
-import { Button } from 'devextreme-react/button';
-import 'devextreme-react/text-area';
+import DataGrid, {
+  Column, Editing, Paging, Lookup, ValidationRule
+} from 'devextreme-react/data-grid';
 
 class App extends React.Component {
 
-  constructor() {
-    super();
+  constructor(props) {
+    super(props);
+  
     this.state = {
-      redirect: false,
-      url: ''
+      data: [],
+      categorys: [],
     };
-  
-    this.document = '';
-    this.meesage = '';
-    this.handleChange = this.handleChange.bind(this);
-    this.postData = this.postData.bind(this);
-    this.showInfo = this.showInfo.bind(this);
-    this.hideInfo = this.hideInfo.bind(this);
 
-    this.closeButtonOptions = {
-      text: 'Aceptar',
-      type: "success",
-      stylingMode: "outlined",
-      onClick: this.hideInfo,
-    };
+    this.componentDidMountCreateProduct = this.componentDidMountCreateProduct.bind(this)
   }
   
-  render() {
-    if (this.state.popupVisible) {
-      return <Navigate to='/client' />;
-    }
-    return (
-      <div className="options">
-        <div className="caption">Ingresar su documento</div>
-        
-        <Form labelLocation="top" onFieldDataChanged={this.handleChange}>
-          <Item dataField="Documento" value={this.document} editorType="dxNumberBox"/>
-        </Form>
-        <Button
-          width={120}
-          text="Contained"
-          type="success"
-          stylingMode="contained"
-        />
-                <Button
-          width={120}
-          text="Contained"
-          type="success"
-          stylingMode="contained"
-        />
-                <Button
-          width={120}
-          text="Contained"
-          type="success"
-          stylingMode="contained"
-          
-        />
-      </div>
-    );
+  componentDidMount() {
+    fetch('http://localhost:3000/category/getcategory')
+    .then(response => response.json())
+    .then(data => {
+      console.log(data)
+      this.state.categorys = data
+      this.componentDidMountData();
+    });
   }
 
-  handleChange(event) {
-    this.setDocument(event.value);
-    console.log('A name was submitted:' + this.document);
-    console.log(this.getDocument());
+  componentDidMountData(){
+    fetch('http://localhost:3000/product/getproducts')
+      .then(response => response.json())
+      .then(data => {
+        this.setState({ data })
+      });
   }
 
-  setDocument(value){
-    this.document = value;
-  }
+  componentDidMountCreateProduct(e) {
+    const dataUpdate = {
+      nombre:e.data.Nombre, 
+      precio:e.data.Precio, 
+      referencia:e.data.Referencia, 
+      talla:e.data.Talla, 
+      color:e.data.Color, 
+      idcategoria:e.data.IdCategoria, 
+      urlimages:e.data.UrlImages}
 
-  async postData(){
-
-    const data = { correo: 'juampa8888@gmail.com', contrasena: '1093225987' };
-
-    const response = await fetch('http://localhost:3000/users/login', {
+    fetch('http://localhost:3000/product/createproduct', {
       mode: 'cors',
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*'
       },
-      body: JSON.stringify(data)
+      body: JSON.stringify(dataUpdate)
+    }).then(response => response.json())
+    .then(data => {
+      console.log(data);
     });
+  }
 
-    console.log(response);
+  componentDidMountUpdateProduct(e) {
+    const dataUpdate = {
+      nombre:e.data.Nombre, 
+      precio:e.data.Precio, 
+      referencia:e.data.Referencia, 
+      talla:e.data.Talla, 
+      color:e.data.Color, 
+      idcategoria:e.data.IdCategoria, 
+      urlimages:e.data.UrlImages, 
+      id:e.data.Id}
+    console.log(dataUpdate);
+    fetch('http://localhost:3000/product/updateproduct', {
+      mode: 'cors',
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*'
+      },
+      body: JSON.stringify(dataUpdate)
+    }).then(response => response.json())
+    .then(data => {
+      console.log(data);
+    });
+  }
 
-    const responseData = await response.json();
+  componentDidMountDeleteProduct(e) {
+    const dataUpdate = { 
+      id:e.data.Id}
+    console.log(dataUpdate);
+    fetch('http://localhost:3000/product/deleteproduct', {
+      mode: 'cors',
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*'
+      },
+      body: JSON.stringify(dataUpdate)
+    }).then(response => response.json())
+    .then(data => {
+      console.log(data);
+    });
+  }
 
-    console.log(responseData[0].TipoUsuario);
+  render() {
+    return (
+      
+      <div id="tree-list-demo">
+        <DataGrid
+          id="gridContainer"
+          dataSource={this.state.data}
+          allowColumnReordering={true}
+          showBorders={true}
+          onInitNewRow={this.onInitNewRow}
+          onRowInserted={this.componentDidMountCreateProduct}
+          onRowUpdated={this.componentDidMountUpdateProduct}
+          onRowRemoved={this.componentDidMountDeleteProduct}
+          onSaving={this.onSaving}
+          onSaved={this.onSaved}
+          onEditCanceling={this.onEditCanceling}
+          onEditCanceled={this.onEditCanceled}>
 
-    if(responseData[0].TipoUsuario === "Administrador")
-    { 
-      console.log(this.state.popupVisible);
-      this.setState({
-        popupVisible: true,
-        url:'/administrator'
-      });
+          <Paging enabled={true} />
+          <Editing
+            mode="form"
+            allowUpdating={true}
+            allowDeleting={true}
+            allowAdding={true} />
+          <Column dataField="Nombre">
+            <ValidationRule type="required" />
+          </Column>
+          <Column dataField="Precio" caption="Precio">
+            <ValidationRule type="required" />
+          </Column>
+          <Column
+            dataField="IdCategoria"
+            caption="Categoria"
+          > 
+            <ValidationRule type="required" />
+            <Lookup dataSource={this.state.categorys} displayExpr="title" valueExpr="Id" />
+          </Column>
+          <Column dataField="Referencia" caption="Referencia">
+            <ValidationRule type="required" />
+          </Column>
+          <Column  dataField="Talla">
+            <ValidationRule type="required" />
+          </Column>
+          <Column dataField="Color" >
+            <ValidationRule type="required" />
+          </Column>
+          <Column  dataField="UrlImages" caption="Url Imagen">
+            <ValidationRule type="required" />
+          </Column>
+        </DataGrid>
+      </div>
+    );
+  }
+
+  onEditorPreparing(e) {
+    if (e.dataField === 'IdCategoria' && e.row.data.ID === 1) {
+      e.editorOptions.disabled = true;
+      e.editorOptions.value = null;
     }
-    else if(responseData[0].TipoUsuario === "Cliente")
-    {
-      console.log(this.state.popupVisible);
-      this.setState({
-        popupVisible: true,
-        url:'/client'
-      });
-    }
   }
 
-
-  showInfo(){
-    this.setState({
-      positionOf: "#center",
-      popupVisible: true,
-    });
+  onInitNewRow(e) {
+    e.data.Id = 1;
   }
-  
-  hideInfo(){
-    this.setState({
-      popupVisible: false,
-    });
-  }
-
 }
 
 export default App;

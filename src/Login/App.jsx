@@ -24,7 +24,7 @@ class App extends React.Component {
       return <Navigate to={this.state.url} />;
     }
     return (
-      <div className="container">
+      <div className="container-login">
         <div className="caption">Inicio de sesion</div>
           <TextBox
             width={250}
